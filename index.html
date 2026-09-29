@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grande Dia - Samuel & Ana</title>
-
+  
   <!-- Otimização do Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Great+Vibes&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+  
   <style>
     /* Reset ultraleve */
     * {
@@ -28,8 +28,8 @@
       font-family: 'Montserrat', sans-serif;
       padding: 2.5rem 1rem;
       color: #4a423d;
-
-      /* FOTO DE FUNDO REAJUSTADA PARA NÃO CORTAR CABEÇAS */
+      
+      /* FOTO DE FUNDO REAJUSTADA */
       background-color: #fdfbf7;
       background-image: linear-gradient(rgba(253, 251, 247, 0.88), rgba(253, 251, 247, 0.92)), url('capa.jpg');
       background-repeat: no-repeat;
@@ -51,6 +51,31 @@
       border: 1px solid rgba(212, 175, 55, 0.3);
       pointer-events: none;
       z-index: 10;
+    }
+
+    /* BOTÃO FLUTUANTE DE ÁUDIO */
+    .audio-control-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      font-size: 1.2rem;
+    }
+
+    .audio-control-btn:hover {
+      transform: scale(1.08);
+      background: #ffffff;
     }
 
     .container {
@@ -312,7 +337,6 @@
 
     @media (max-width: 480px) {
       body {
-        /* No celular, ajusta a imagem de fundo para não esticar nem cortar */
         background-size: contain;
         background-position: top center;
       }
@@ -335,13 +359,23 @@
 </head>
 <body>
 
+  <!-- ELEMENTO DE ÁUDIO DE FUNDO -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="musica.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- BOTÃO FLUTUANTE DE ÁUDIO -->
+  <button class="audio-control-btn" id="audioBtn" title="Ativar/Desativar Música">
+    🔊
+  </button>
+
   <div class="container">
     <div class="card">
 
       <div class="sub-header">Contagem Regressiva</div>
       <h1 class="main-title">Grande Dia</h1>
       <h2 class="subtitle">Casamento Samuel e Ana</h2>
-
+      
       <div class="divider"></div>
 
       <div class="countdown-container">
@@ -364,15 +398,15 @@
       </div>
 
       <p class="footer-text">"Contando cada segundo para nunca mais dizer 'tchau'!"</p>
-
+      
       <div class="date-badge">17 de Dezembro de 2027</div>
 
       <!-- Seção do Vídeo -->
       <div class="video-section">
         <p class="video-title">Enquanto não chega o nosso dia, sonhe conosco e veja o nosso noivado</p>
-
+        
         <div class="native-video-wrapper">
-          <video controls playsinline preload="none">
+          <video id="noivadoVideo" controls playsinline preload="none">
             <source src="noivado.mp4" type="video/mp4">
             Seu navegador não suporta a exibição de vídeos.
           </video>
@@ -382,7 +416,7 @@
       <!-- MINI CRONÔMETRO ESTILO INSTAGRAM -->
       <div class="insta-sticker-section">
         <p class="insta-sticker-title">Contagem Regressiva Compacta</p>
-
+        
         <div class="insta-sticker">
           <div class="insta-sticker-header">
             <svg class="insta-icon" viewBox="0 0 24 24">
@@ -390,7 +424,7 @@
             </svg>
             <span class="insta-sticker-event-title">Samuel & Ana</span>
           </div>
-
+          
           <div class="insta-sticker-countdown">
             <div class="insta-time-unit">
               <span class="insta-time-number" id="insta-days">00</span>
@@ -471,6 +505,66 @@
 
     updateCountdown();
     setInterval(updateCountdown, 1000);
+
+    /* GERENCIAMENTO DE ÁUDIO E VÍDEO */
+    const bgMusic = document.getElementById('bgMusic');
+    const audioBtn = document.getElementById('audioBtn');
+    const noivadoVideo = document.getElementById('noivadoVideo');
+    let hasInteracted = false;
+    let wasMusicPlayingBeforeVideo = false;
+
+    // Tenta iniciar a música no primeiro clique/toque na página
+    function startAudioOnInteraction() {
+      if (!hasInteracted) {
+        hasInteracted = true;
+        bgMusic.play().then(() => {
+          audioBtn.textContent = '🔊';
+        }).catch(() => {
+          audioBtn.textContent = '🔇';
+        });
+        document.removeEventListener('click', startAudioOnInteraction);
+        document.removeEventListener('touchstart', startAudioOnInteraction);
+      }
+    }
+
+    document.addEventListener('click', startAudioOnInteraction);
+    document.addEventListener('touchstart', startAudioOnInteraction);
+
+    // Botão manual de Áudio (🔊 / 🔇)
+    audioBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (bgMusic.paused) {
+        bgMusic.play();
+        audioBtn.textContent = '🔊';
+      } else {
+        bgMusic.pause();
+        audioBtn.textContent = '🔇';
+      }
+    });
+
+    // Quando dar PLAY no VÍDEO -> Pausa a MÚSICA de fundo
+    noivadoVideo.addEventListener('play', () => {
+      if (!bgMusic.paused) {
+        wasMusicPlayingBeforeVideo = true;
+        bgMusic.pause();
+        audioBtn.textContent = '🔇';
+      }
+    });
+
+    // Quando PAUSAR ou TERMINAR o VÍDEO -> Retorna a MÚSICA de fundo
+    noivadoVideo.addEventListener('pause', () => {
+      if (wasMusicPlayingBeforeVideo) {
+        bgMusic.play();
+        audioBtn.textContent = '🔊';
+      }
+    });
+
+    noivadoVideo.addEventListener('ended', () => {
+      if (wasMusicPlayingBeforeVideo) {
+        bgMusic.play();
+        audioBtn.textContent = '🔊';
+      }
+    });
   </script>
 </body>
 </html>
